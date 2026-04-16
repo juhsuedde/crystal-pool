@@ -34,3 +34,6 @@ dist-ssr
 
 # Bun
 bun.lockb
+
+# Supabase
+supabase/config.toml
