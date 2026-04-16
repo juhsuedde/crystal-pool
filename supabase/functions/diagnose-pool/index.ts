@@ -4,6 +4,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const RATE_LIMIT = 10; // Max requests per minute per IP
+const rateLimit = new Map<string, number>();
+
 interface Body {
   photo?: string | null;
   symptoms?: string[];
@@ -47,8 +50,32 @@ const tool = {
   },
 };
 
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute
+  
+  const lastReset = rateLimit.get(ip) || 0;
+  if (now - lastReset > windowMs) {
+    rateLimit.set(ip, now);
+    rateLimit.set(`${ip}:count`, 1);
+    return true;
+  }
+  
+  const count = (rateLimit.get(`${ip}:count`) || 0) + 1;
+  rateLimit.set(`${ip}:count`, count);
+  return count <= RATE_LIMIT;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Rate limiting by IP (10 req/min)
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
+  if (!checkRateLimit(ip)) {
+    return new Response(JSON.stringify({ error: "Too many requests. Try again shortly." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
