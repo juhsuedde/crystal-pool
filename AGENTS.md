@@ -26,7 +26,7 @@ npm run test     # Run tests (vitest)
 Create `.env` with:
 ```
 VITE_SUPABASE_URL=your_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_SUPABASE_PUBLISHABLE_KEY=your_key
 ```
 
 ## Tests
