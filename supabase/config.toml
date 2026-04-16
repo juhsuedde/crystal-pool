@@ -1,4 +1,0 @@
-project_id = "zrykozlfdwclotscvwez"
-
-[functions.diagnose-pool]
-verify_jwt = false
