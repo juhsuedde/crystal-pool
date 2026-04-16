@@ -1,6 +1,10 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { Droplets, LayoutGrid, LifeBuoy, ListChecks } from "lucide-react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Droplets, LayoutGrid, LifeBuoy, ListChecks, LogOut, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { migrateGuestDataIfNeeded } from "@/lib/cloudStorage";
 
 const navItems = [
   { to: "/", label: "Pools", icon: LayoutGrid, end: true },
@@ -10,6 +14,15 @@ const navItems = [
 
 const Layout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  useEffect(() => {
+    if (user) migrateGuestDataIfNeeded(user.id);
+  }, [user]);
+
+  const initial = user?.email?.[0]?.toUpperCase() ?? "?";
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-30 border-b border-border/50 backdrop-blur-xl bg-background/60">
@@ -23,7 +36,20 @@ const Layout = () => {
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Maintenance OS</p>
             </div>
           </div>
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground px-2.5 py-1 rounded-full border border-border">Guest</span>
+          {user ? (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-xs font-semibold text-secondary">
+                {initial}
+              </div>
+              <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => navigate("/auth")} className="rounded-full">
+              <LogIn className="w-3.5 h-3.5 mr-1.5" /> Sign in
+            </Button>
+          )}
         </div>
       </header>
 

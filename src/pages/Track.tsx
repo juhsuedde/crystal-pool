@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Beaker, Filter, Droplets, FlaskConical, Activity, Sparkles, Trash2 } from "lucide-react";
+import { Beaker, Filter, Droplets, FlaskConical, Activity, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addLog, loadLogs, loadPools, upsertPool, computeStatus, type LogEntry, type Pool } from "@/lib/storage";
+import { addLogCloud, fetchLogsCloud, fetchPoolsCloud, upsertPoolCloud } from "@/lib/cloudStorage";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const QUICK_ACTIONS = [
   { id: "chlorine", label: "Added Chlorine", icon: Beaker },
@@ -19,6 +21,7 @@ const QUICK_ACTIONS = [
 
 const Track = () => {
   const [params] = useSearchParams();
+  const { user } = useAuth();
   const [pools, setPools] = useState<Pool[]>([]);
   const [poolId, setPoolId] = useState<string>("");
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -28,30 +31,61 @@ const Track = () => {
   const [alkalinity, setAlkalinity] = useState("");
   const [temp, setTemp] = useState("");
 
+  const refresh = async () => {
+    if (user) {
+      try {
+        const [ps, ls] = await Promise.all([fetchPoolsCloud(), fetchLogsCloud()]);
+        setPools(ps);
+        setLogs(ls);
+        setPoolId(prev => params.get("pool") || prev || ps[0]?.id || "");
+      } catch {
+        toast.error("Failed to load data");
+      }
+    } else {
+      const ps = loadPools();
+      setPools(ps);
+      setLogs(loadLogs());
+      setPoolId(params.get("pool") || ps[0]?.id || "");
+    }
+  };
+
   useEffect(() => {
-    const ps = loadPools();
-    setPools(ps);
-    setPoolId(params.get("pool") || ps[0]?.id || "");
-    setLogs(loadLogs());
-  }, [params]);
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params, user?.id]);
 
   const pool = useMemo(() => pools.find(p => p.id === poolId), [pools, poolId]);
   const poolLogs = useMemo(() => logs.filter(l => l.poolId === poolId).slice(0, 30), [logs, poolId]);
 
-  const quickLog = (action: string) => {
-    if (!pool) return toast.error("Add a pool first");
-    addLog({
-      id: crypto.randomUUID(),
-      poolId: pool.id,
-      type: action.includes("filter") || action.includes("backwash") ? "filter" : "chemical",
-      action,
-      createdAt: new Date().toISOString(),
-    });
-    setLogs(loadLogs());
-    toast.success(`Logged: ${action}`);
+  const persistLog = async (entry: LogEntry) => {
+    if (user) await addLogCloud(entry, user.id);
+    else addLog(entry);
   };
 
-  const saveReading = () => {
+  const persistPool = async (p: Pool) => {
+    if (user) await upsertPoolCloud(p, user.id);
+    else upsertPool(p);
+  };
+
+  const quickLog = async (action: string) => {
+    if (!pool) return toast.error("Add a pool first");
+    const entry: LogEntry = {
+      id: crypto.randomUUID(),
+      poolId: pool.id,
+      type: action.toLowerCase().includes("filter") || action.toLowerCase().includes("backwash") ? "filter" : "chemical",
+      action,
+      createdAt: new Date().toISOString(),
+    };
+    try {
+      await persistLog(entry);
+      await refresh();
+      toast.success(`Logged: ${action}`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to log");
+    }
+  };
+
+  const saveReading = async () => {
     if (!pool) return toast.error("Add a pool first");
     const values = {
       ph: ph ? parseFloat(ph) : pool.ph,
@@ -65,19 +99,22 @@ const Track = () => {
       lastReadingAt: new Date().toISOString(),
     };
     updated.status = computeStatus(updated);
-    upsertPool(updated);
-    addLog({
-      id: crypto.randomUUID(),
-      poolId: pool.id,
-      type: "reading",
-      action: "Logged reading",
-      values,
-      createdAt: new Date().toISOString(),
-    });
-    setPools(loadPools());
-    setLogs(loadLogs());
-    setPh(""); setChlorine(""); setAlkalinity(""); setTemp("");
-    toast.success("Reading saved");
+    try {
+      await persistPool(updated);
+      await persistLog({
+        id: crypto.randomUUID(),
+        poolId: pool.id,
+        type: "reading",
+        action: "Logged reading",
+        values,
+        createdAt: new Date().toISOString(),
+      });
+      await refresh();
+      setPh(""); setChlorine(""); setAlkalinity(""); setTemp("");
+      toast.success("Reading saved");
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to save");
+    }
   };
 
   if (pools.length === 0) {
