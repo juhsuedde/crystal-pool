@@ -1,4 +1,5 @@
-// Local storage persistence for Crystal Pool (guest/offline-first)
+// Local storage persistence for Crystal Pool
+// Supports both Homeowner (single pool) and Pro Keeper (multiple pools)
 export type PoolStatus = "crystal" | "warning" | "critical" | "algae" | "cloudy" | "offline";
 
 export interface Pool {
@@ -48,6 +49,11 @@ export const upsertPool = (pool: Pool) => {
   savePools(pools);
 };
 
+export const deletePool = (poolId: string) => {
+  const pools = loadPools().filter(p => p.id !== poolId);
+  savePools(pools);
+};
+
 export const addLog = (log: LogEntry) => {
   const logs = loadLogs();
   logs.unshift(log);
@@ -70,7 +76,7 @@ export const seedDemoIfEmpty = () => {
   if (loadPools().length > 0) return;
   const now = new Date().toISOString();
   const demo: Pool[] = [
-    { id: crypto.randomUUID(), name: "Backyard Oasis", volumeLiters: 50000, type: "outdoor", createdAt: now, lastReadingAt: now, status: "crystal", ph: 7.4, chlorine: 2.0, alkalinity: 110, temperature: 28 },
+    { id: crypto.randomUUID(), name: "My Pool", volumeLiters: 50000, type: "outdoor", createdAt: now, lastReadingAt: now, status: "crystal", ph: 7.4, chlorine: 2.0, alkalinity: 110, temperature: 28 },
   ];
   savePools(demo);
 };

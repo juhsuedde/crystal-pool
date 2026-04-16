@@ -1,10 +1,13 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Camera, Upload, Sparkles, Loader2, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { loadPools, addLog, type Pool } from "@/lib/storage";
+import { fetchPoolsCloud } from "@/lib/cloudStorage";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const SYMPTOMS = [
   { id: "green", label: "Green Water", emoji: "🟢" },
@@ -25,13 +28,38 @@ interface Diagnosis {
 }
 
 const Rescue = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [pools] = useState<Pool[]>(loadPools());
-  const [poolId, setPoolId] = useState<string>(pools[0]?.id ?? "");
+  const [pools, setPools] = useState<Pool[]>([]);
+  const [poolId, setPoolId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Diagnosis | null>(null);
+
+  const isProKeeper = user && pools.length > 1;
+
+  useEffect(() => {
+    const loadPoolsData = async () => {
+      if (user) {
+        try {
+          const ps = await fetchPoolsCloud();
+          setPools(ps);
+          setPoolId(ps[0]?.id ?? "");
+        } catch {
+          setPools(loadPools());
+          setPoolId(loadPools()[0]?.id ?? "");
+        }
+      } else {
+        setPools(loadPools());
+        setPoolId(loadPools()[0]?.id ?? "");
+      }
+    };
+    loadPoolsData();
+  }, [user]);
+
+  const pool = pools.find(p => p.id === poolId);
 
   const togglePhoto = (file?: File) => {
     if (!file) return;
@@ -58,7 +86,6 @@ const Rescue = () => {
     setLoading(true);
     setResult(null);
     try {
-      const pool = pools.find(p => p.id === poolId);
       const { data, error } = await supabase.functions.invoke("diagnose-pool", {
         body: {
           photo,
@@ -109,7 +136,6 @@ const Rescue = () => {
 
       {!result && (
         <>
-          {/* Photo upload */}
           <section className="glass-card rounded-2xl p-4">
             <input
               ref={fileRef}
@@ -143,7 +169,6 @@ const Rescue = () => {
             )}
           </section>
 
-          {/* Symptoms */}
           <section>
             <h3 className="text-sm font-semibold mb-3 text-muted-foreground uppercase tracking-wider">Visible symptoms</h3>
             <div className="grid grid-cols-2 gap-2.5">
@@ -168,8 +193,7 @@ const Rescue = () => {
             </div>
           </section>
 
-          {/* Pool selector */}
-          {pools.length > 0 && (
+          {isProKeeper ? (
             <section className="glass-card rounded-2xl p-4">
               <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Pool (for dosage)</label>
               <select
@@ -182,11 +206,27 @@ const Rescue = () => {
                 ))}
               </select>
             </section>
+          ) : pool ? (
+            <section className="glass-card rounded-2xl p-4">
+              <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Pool</label>
+              <div className="mt-2 text-sm font-medium">
+                {pool.name} — {(pool.volumeLiters/1000).toFixed(1)}k L
+              </div>
+            </section>
+          ) : null}
+
+          {!pool && (
+            <div className="glass-card rounded-2xl p-6 text-center">
+              <p className="text-sm text-muted-foreground mb-4">Add a pool first to get accurate dosages.</p>
+              <Button onClick={() => navigate("/")} className="bg-gradient-cyan text-secondary-foreground">
+                Go to Home
+              </Button>
+            </div>
           )}
 
           <Button
             onClick={diagnose}
-            disabled={loading}
+            disabled={loading || !pool}
             className="w-full h-14 text-base font-semibold bg-gradient-cyan text-secondary-foreground hover:opacity-90 rounded-2xl shadow-glow"
           >
             {loading ? (

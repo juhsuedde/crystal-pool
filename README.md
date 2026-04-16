@@ -1,6 +1,6 @@
-# Crystal Pool
+# 💎 Crystal Pool
 
-Sistema de gerenciamento e rastreamento para tratamentos de resgate de piscina.
+Aplicativo inteligente de manutenção de piscinas que combina **diagnóstico de emergência por IA** com **acompanhamento preventivo de longo prazo**.
 
 ## Tecnologias
 
@@ -11,6 +11,26 @@ Sistema de gerenciamento e rastreamento para tratamentos de resgate de piscina.
 - **Autenticação**: Lovable Cloud Auth
 - **Rotas**: React Router DOM
 - **Validação**: Zod
+
+## ✨ Funcionalidades Principais
+
+### 🚨 Modo Emergência (Save My Pool)
+
+O recurso estrela para momentos de crise:
+
+- **Análise de imagem por IA**: O usuário tira uma foto da água e recebe diagnóstico instantâneo
+- **Checklist inteligente**: Verde, turva, espuma, cheiro → o app identifica o problema
+- **Prescrição personalizada**: Dosagem exata de produtos baseada no volume da piscina
+- **Timeline de recuperação**: Estimativa de quando a piscina ficará cristalina
+
+### 📊 Modo Acompanhamento (Track Pool)
+
+Manutenção preventiva sem complicação:
+
+- **Scan de medidores**: O usuário envia foto de tiras de teste ou medidores digitais, e nossa IA extrai os valores automaticamente
+- **Quick Logs**: Registro de ações com um toque ("Adicionei cloro", "Liguei filtro")
+- **Dashboard visual**: Status em tempo real com indicadores de cor (Azul Cristal → Verde Alerta)
+- **Timeline histórica**: Visualização de padrões ao longo do tempo (estilo GitHub contributions)
 
 ## Estrutura do Projeto
 
@@ -31,25 +51,16 @@ src/
 └── main.tsx         # Entry point
 ```
 
-## Scripts
+### 👤 Múltiplos Perfis de Usuário
 
-```bash
-npm run dev          # Iniciar servidor de desenvolvimento
-npm run build       # Build de produção
-npm run lint        # Verificar código
-npm run test        # Executar testes
-npm run test:watch  # Testes em modo watch
-```
+| Modo              | Descrição                                                          | Ideal para                 |
+| ----------------- | ------------------------------------------------------------------ | -------------------------- |
+| **🎫 Guest**      | Acesso imediato ao SOS Mode, dados locais por 7 dias               | Usuários em emergência     |
+| **🏠 Homeowner**  | Registro de uma piscina, histórico completo, notificações          | Proprietários residenciais |
+| **🧢 Pro Keeper** | Piscinas ilimitadas, relatórios PDF, compartilhamento com clientes | Profissionais de limpeza   |
 
-## Variáveis de Ambiente
+### 🔔 Sistema Inteligente de Notificações
 
-Crie um arquivo `.env` com:
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-## Licença
-
-MIT
+- Lembrete de início/fim de filtragem
+- Alertas de parâmetros químicos críticos
+- Previsão meteorológica integrada (chuva prevista = cheque o pH)

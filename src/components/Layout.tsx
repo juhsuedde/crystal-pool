@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { migrateGuestDataIfNeeded } from "@/lib/cloudStorage";
 
 const navItems = [
-  { to: "/", label: "Pools", icon: LayoutGrid, end: true },
+  { to: "/", label: "Home", icon: LayoutGrid, end: true },
   { to: "/rescue", label: "Rescue", icon: LifeBuoy },
   { to: "/track", label: "Track", icon: ListChecks },
 ];

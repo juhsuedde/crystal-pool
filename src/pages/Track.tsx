@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Beaker, Filter, Droplets, FlaskConical, Activity, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ const QUICK_ACTIONS = [
 
 const Track = () => {
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [pools, setPools] = useState<Pool[]>([]);
   const [poolId, setPoolId] = useState<string>("");
@@ -30,6 +31,8 @@ const Track = () => {
   const [chlorine, setChlorine] = useState("");
   const [alkalinity, setAlkalinity] = useState("");
   const [temp, setTemp] = useState("");
+
+  const isProKeeper = user && pools.length > 1;
 
   const refresh = async () => {
     if (user) {
@@ -122,7 +125,10 @@ const Track = () => {
       <div className="glass-card rounded-2xl p-10 text-center">
         <Activity className="w-8 h-8 text-secondary mx-auto mb-3" />
         <h3 className="font-semibold mb-1">No pools to track</h3>
-        <p className="text-sm text-muted-foreground">Add a pool from the Pools tab to start logging.</p>
+        <p className="text-sm text-muted-foreground mb-4">Add a pool from the Home tab to start logging.</p>
+        <Button onClick={() => navigate("/")} className="bg-gradient-cyan text-secondary-foreground">
+          Go to Home
+        </Button>
       </div>
     );
   }
@@ -134,16 +140,25 @@ const Track = () => {
         <p className="text-sm text-muted-foreground">Quick-log maintenance and chemistry readings.</p>
       </header>
 
-      <section className="glass-card rounded-2xl p-4">
-        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Pool</Label>
-        <select
-          value={poolId}
-          onChange={(e) => setPoolId(e.target.value)}
-          className="mt-2 w-full bg-input border border-border rounded-lg px-3 py-2.5 text-sm"
-        >
-          {pools.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-      </section>
+      {isProKeeper && (
+        <section className="glass-card rounded-2xl p-4">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Pool</Label>
+          <select
+            value={poolId}
+            onChange={(e) => setPoolId(e.target.value)}
+            className="mt-2 w-full bg-input border border-border rounded-lg px-3 py-2.5 text-sm"
+          >
+            {pools.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </section>
+      )}
+
+      {!isProKeeper && pool && (
+        <section className="glass-card rounded-2xl p-4">
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Pool</Label>
+          <div className="mt-2 text-sm font-medium">{pool.name}</div>
+        </section>
+      )}
 
       <section>
         <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Quick log</h3>

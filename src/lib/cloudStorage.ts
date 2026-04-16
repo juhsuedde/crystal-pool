@@ -2,7 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Pool, LogEntry, PoolStatus } from "./storage";
 import { computeStatus, loadPools as loadLocal, loadLogs as loadLocalLogs, savePools, saveLogs } from "./storage";
 
-// DB row → app Pool
 const rowToPool = (r: any): Pool => ({
   id: r.id,
   name: r.name,
@@ -47,6 +46,12 @@ export const fetchPoolsCloud = async (): Promise<Pool[]> => {
   return (data ?? []).map(rowToPool);
 };
 
+export const fetchPoolCloud = async (): Promise<Pool | null> => {
+  const { data, error } = await supabase.from("pools").select("*").limit(1).maybeSingle();
+  if (error) throw error;
+  return data ? rowToPool(data) : null;
+};
+
 export const upsertPoolCloud = async (pool: Pool, userId: string): Promise<void> => {
   const { error } = await supabase.from("pools").upsert(poolToRow(pool, userId));
   if (error) throw error;
@@ -76,7 +81,6 @@ export const addLogCloud = async (log: LogEntry, userId: string): Promise<void> 
   if (error) throw error;
 };
 
-// One-time migration: push any local guest data into the cloud, then clear it
 const MIGRATED_KEY = "cp.migrated";
 export const migrateGuestDataIfNeeded = async (userId: string) => {
   if (localStorage.getItem(MIGRATED_KEY)) return;
@@ -104,7 +108,6 @@ export const migrateGuestDataIfNeeded = async (userId: string) => {
       }));
       await supabase.from("pool_logs").insert(rows);
     }
-    // Clear local guest data
     savePools([]);
     saveLogs([]);
     localStorage.setItem(MIGRATED_KEY, "1");
