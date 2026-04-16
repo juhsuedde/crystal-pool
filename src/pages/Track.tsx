@@ -9,6 +9,7 @@ import { addLogCloud, fetchLogsCloud, fetchPoolsCloud, upsertPoolCloud } from "@
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import ChemistryChart from "@/components/ChemistryChart";
 
 const QUICK_ACTIONS = [
   { id: "chlorine", label: "Added Chlorine", icon: Beaker },
@@ -190,6 +191,13 @@ const Track = () => {
           Save reading
         </Button>
       </section>
+
+      {pool && (
+        <section>
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">30-day trends</h3>
+          <ChemistryChart pool={pool} logs={logs} />
+        </section>
+      )}
 
       <section>
         <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-3">Recent activity</h3>
