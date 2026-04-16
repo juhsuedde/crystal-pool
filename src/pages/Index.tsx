@@ -1,16 +1,129 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, LifeBuoy, Sparkles } from "lucide-react";
+import PoolCard from "@/components/PoolCard";
+import { Pool, loadPools, seedDemoIfEmpty, upsertPool, computeStatus } from "@/lib/storage";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const navigate = useNavigate();
+  const [pools, setPools] = useState<Pool[]>([]);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [volume, setVolume] = useState("50000");
+
+  useEffect(() => {
+    seedDemoIfEmpty();
+    setPools(loadPools());
+  }, []);
+
+  const summary = useMemo(() => {
+    const total = pools.length;
+    const ok = pools.filter(p => p.status === "crystal").length;
+    const attention = pools.filter(p => p.status !== "crystal" && p.status !== "offline").length;
+    return { total, ok, attention };
+  }, [pools]);
+
+  const addPool = () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const v = Math.max(100, parseInt(volume) || 50000);
+    const pool: Pool = {
+      id: crypto.randomUUID(),
+      name: trimmed,
+      volumeLiters: v,
+      type: "outdoor",
+      createdAt: new Date().toISOString(),
+      status: "offline",
+    };
+    pool.status = computeStatus(pool);
+    upsertPool(pool);
+    setPools(loadPools());
+    setName(""); setVolume("50000"); setOpen(false);
+    toast.success(`${trimmed} added`);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="space-y-6">
+      <section>
+        <div className="flex items-end justify-between mb-1">
+          <h2 className="text-2xl font-semibold tracking-tight">Your Pools</h2>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="secondary" className="rounded-full font-medium">
+                <Plus className="w-4 h-4 mr-1" /> Add
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-card border-border">
+              <DialogHeader>
+                <DialogTitle>Add a pool</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="pname">Pool name</Label>
+                  <Input id="pname" value={name} onChange={(e) => setName(e.target.value)} placeholder="Backyard Oasis" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pvol">Volume (liters)</Label>
+                  <Input id="pvol" type="number" inputMode="numeric" value={volume} onChange={(e) => setVolume(e.target.value)} />
+                </div>
+                <Button onClick={addPool} className="w-full bg-gradient-cyan text-secondary-foreground hover:opacity-90">
+                  Create pool
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {summary.total > 0
+            ? `${summary.ok} optimal · ${summary.attention} need attention`
+            : "Add your first pool to start tracking"}
+        </p>
+      </section>
+
+      <section>
+        <button
+          onClick={() => navigate("/rescue")}
+          className="relative w-full overflow-hidden rounded-3xl p-5 text-left transition-all hover:scale-[1.01] active:scale-[0.99]"
+          style={{ background: "var(--gradient-cyan)" }}
+        >
+          <div className="absolute inset-0 opacity-30 mix-blend-overlay" style={{ background: "radial-gradient(circle at 80% 20%, hsl(215 70% 18%), transparent 60%)" }} />
+          <div className="relative flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-secondary-foreground/10 backdrop-blur flex items-center justify-center">
+              <LifeBuoy className="w-7 h-7 text-secondary-foreground" strokeWidth={2.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <Sparkles className="w-3.5 h-3.5 text-secondary-foreground/80" />
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-secondary-foreground/80">AI Diagnosis</span>
+              </div>
+              <h3 className="text-lg font-bold text-secondary-foreground leading-tight">Save My Pool</h3>
+              <p className="text-xs text-secondary-foreground/80 mt-0.5">Photo + symptoms → instant recovery plan</p>
+            </div>
+          </div>
+        </button>
+      </section>
+
+      <section className="space-y-3">
+        {pools.length === 0 ? (
+          <div className="glass-card rounded-2xl p-10 text-center">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-secondary/15 flex items-center justify-center mb-3">
+              <Plus className="w-5 h-5 text-secondary" />
+            </div>
+            <p className="text-sm text-muted-foreground">No pools yet — tap "Add" above.</p>
+          </div>
+        ) : (
+          pools.map(pool => (
+            <PoolCard key={pool.id} pool={pool} onClick={() => navigate(`/track?pool=${pool.id}`)} />
+          ))
+        )}
+      </section>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
