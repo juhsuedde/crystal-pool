@@ -14,7 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pool_logs: {
+        Row: {
+          action: string
+          created_at: string
+          detail: string | null
+          id: string
+          pool_id: string
+          type: string
+          user_id: string
+          values: Json | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          pool_id: string
+          type: string
+          user_id: string
+          values?: Json | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          pool_id?: string
+          type?: string
+          user_id?: string
+          values?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pool_logs_pool_id_fkey"
+            columns: ["pool_id"]
+            isOneToOne: false
+            referencedRelation: "pools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pools: {
+        Row: {
+          alkalinity: number | null
+          chlorine: number | null
+          created_at: string
+          id: string
+          last_reading_at: string | null
+          name: string
+          ph: number | null
+          status: string
+          temperature: number | null
+          type: string
+          updated_at: string
+          user_id: string
+          volume_liters: number
+        }
+        Insert: {
+          alkalinity?: number | null
+          chlorine?: number | null
+          created_at?: string
+          id?: string
+          last_reading_at?: string | null
+          name: string
+          ph?: number | null
+          status?: string
+          temperature?: number | null
+          type?: string
+          updated_at?: string
+          user_id: string
+          volume_liters?: number
+        }
+        Update: {
+          alkalinity?: number | null
+          chlorine?: number | null
+          created_at?: string
+          id?: string
+          last_reading_at?: string | null
+          name?: string
+          ph?: number | null
+          status?: string
+          temperature?: number | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+          volume_liters?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

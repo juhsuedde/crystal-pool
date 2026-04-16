@@ -3,23 +3,39 @@ import { useNavigate } from "react-router-dom";
 import { Plus, LifeBuoy, Sparkles } from "lucide-react";
 import PoolCard from "@/components/PoolCard";
 import { Pool, loadPools, seedDemoIfEmpty, upsertPool, computeStatus } from "@/lib/storage";
+import { fetchPoolsCloud, upsertPoolCloud } from "@/lib/cloudStorage";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [pools, setPools] = useState<Pool[]>([]);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [volume, setVolume] = useState("50000");
 
+  const refresh = async () => {
+    if (user) {
+      try {
+        setPools(await fetchPoolsCloud());
+      } catch (e: any) {
+        toast.error("Failed to load pools");
+      }
+    } else {
+      seedDemoIfEmpty();
+      setPools(loadPools());
+    }
+  };
+
   useEffect(() => {
-    seedDemoIfEmpty();
-    setPools(loadPools());
-  }, []);
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const summary = useMemo(() => {
     const total = pools.length;
@@ -28,7 +44,7 @@ const Index = () => {
     return { total, ok, attention };
   }, [pools]);
 
-  const addPool = () => {
+  const addPool = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
     const v = Math.max(100, parseInt(volume) || 50000);
@@ -41,14 +57,33 @@ const Index = () => {
       status: "offline",
     };
     pool.status = computeStatus(pool);
-    upsertPool(pool);
-    setPools(loadPools());
-    setName(""); setVolume("50000"); setOpen(false);
-    toast.success(`${trimmed} added`);
+    try {
+      if (user) {
+        await upsertPoolCloud(pool, user.id);
+      } else {
+        upsertPool(pool);
+      }
+      await refresh();
+      setName(""); setVolume("50000"); setOpen(false);
+      toast.success(`${trimmed} added`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to add pool");
+    }
   };
 
   return (
     <div className="space-y-6">
+      {!user && (
+        <div className="glass-card rounded-2xl p-4 flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            <span className="text-foreground font-medium">Guest mode</span> · Sign in to sync across devices
+          </p>
+          <Button size="sm" variant="secondary" onClick={() => navigate("/auth")} className="rounded-full shrink-0">
+            Sign in
+          </Button>
+        </div>
+      )}
+
       <section>
         <div className="flex items-end justify-between mb-1">
           <h2 className="text-2xl font-semibold tracking-tight">Your Pools</h2>
