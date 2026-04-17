@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.811c133bee364aeea7e2137b60028d7b",
+  "appName": "crystal-pool",
+  "webDir": "dist",
+  "server": {
+    "url": "https://811c133b-ee36-4aee-a7e2-137b60028d7b.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
