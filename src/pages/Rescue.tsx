@@ -74,7 +74,7 @@ const Rescue = () => {
     reader.readAsDataURL(file);
   };
 
-  const isNative = false; // Capacitor.isNativePlatform(); // TEMPORARILY DISABLED: Capacitor Camera 8.x has Swift concurrency bug with ion-ios-camera library
+  const isNative = Capacitor.isNativePlatform();
 
   const takeNativePhoto = async (source: CameraSource) => {
     try {

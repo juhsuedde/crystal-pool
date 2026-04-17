@@ -42,21 +42,6 @@ npm run test:watch        # Watch mode
 
 ## Known Issues
 
-### Capacitor Camera 8.x iOS Build Bug
-The `@capacitor/camera` plugin (v8.x) has a Swift concurrency bug in its dependency `ion-ios-camera` library that causes iOS build failures:
-
-**Error:**
-```
-Reference to captured var 'saved' in concurrently-executing code
-```
-
-**Workaround (current):**
-In `src/pages/Rescue.tsx`, the native camera is disabled:
-```tsx
-const isNative = false;
-```
-
-**To re-enable when fixed:**
-```tsx
-const isNative = Capacitor.isNativePlatform();
-```
+### Capacitor Camera iOS Build Fixed
+- Use `@capacitor/camera@^7.0.0` to avoid Swift concurrency bug in v8.x
+- Build now works with native camera enabled
