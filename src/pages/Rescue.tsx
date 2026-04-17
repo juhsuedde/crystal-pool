@@ -74,7 +74,7 @@ const Rescue = () => {
     reader.readAsDataURL(file);
   };
 
-  const isNative = false; // Capacitor.isNativePlatform();
+  const isNative = Capacitor.isNativePlatform();
 
   const takeNativePhoto = async (source: CameraSource) => {
     try {
