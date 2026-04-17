@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Droplets } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,8 +49,11 @@ const Auth = () => {
   const handleGoogle = async () => {
     setBusy(true);
     try {
+      const redirectUri = Capacitor.isNativePlatform()
+        ? "crystalpool://auth/callback"
+        : window.location.origin;
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: redirectUri,
       });
       if (result.error) throw result.error;
     } catch (err: any) {
