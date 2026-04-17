@@ -39,3 +39,24 @@ npm run test:watch        # Watch mode
 - `.env` - contains secrets
 - `bun.lockb` - Bun lockfile
 - `supabase/config.toml` - Supabase config
+
+## Known Issues
+
+### Capacitor Camera 8.x iOS Build Bug
+The `@capacitor/camera` plugin (v8.x) has a Swift concurrency bug in its dependency `ion-ios-camera` library that causes iOS build failures:
+
+**Error:**
+```
+Reference to captured var 'saved' in concurrently-executing code
+```
+
+**Workaround (current):**
+In `src/pages/Rescue.tsx`, the native camera is disabled:
+```tsx
+const isNative = false;
+```
+
+**To re-enable when fixed:**
+```tsx
+const isNative = Capacitor.isNativePlatform();
+```
