@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Camera, Upload, Sparkles, Loader2, AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
+import { Camera, Upload, Sparkles, Loader2, AlertTriangle, CheckCircle2, RefreshCw, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -8,6 +8,8 @@ import { fetchPoolsCloud } from "@/lib/cloudStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { Capacitor } from "@capacitor/core";
 
 const SYMPTOMS = [
   { id: "green", label: "Green Water", emoji: "🟢" },
@@ -70,6 +72,24 @@ const Rescue = () => {
     const reader = new FileReader();
     reader.onload = () => setPhoto(reader.result as string);
     reader.readAsDataURL(file);
+  };
+
+  const isNative = Capacitor.isNativePlatform();
+
+  const takeNativePhoto = async (source: CameraSource) => {
+    try {
+      const image = await CapCamera.getPhoto({
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source,
+      });
+      if (image.dataUrl) setPhoto(image.dataUrl);
+    } catch (e: any) {
+      if (!String(e?.message || "").toLowerCase().includes("cancel")) {
+        toast.error("Couldn't access camera");
+      }
+    }
   };
 
   const toggleSymptom = (id: string) => {
@@ -153,6 +173,29 @@ const Rescue = () => {
                   className="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur text-xs font-medium border border-border"
                 >
                   Replace
+                </button>
+              </div>
+            ) : isNative ? (
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  onClick={() => takeNativePhoto(CameraSource.Camera)}
+                  className="h-44 rounded-xl border-2 border-dashed border-secondary/40 bg-secondary/5 flex flex-col items-center justify-center gap-2 hover:border-secondary transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center">
+                    <Camera className="w-6 h-6 text-secondary" />
+                  </div>
+                  <p className="text-sm font-medium">Take photo</p>
+                  <p className="text-xs text-muted-foreground">Native camera</p>
+                </button>
+                <button
+                  onClick={() => takeNativePhoto(CameraSource.Photos)}
+                  className="h-44 rounded-xl border-2 border-dashed border-secondary/40 bg-secondary/5 flex flex-col items-center justify-center gap-2 hover:border-secondary transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-secondary/15 flex items-center justify-center">
+                    <ImageIcon className="w-6 h-6 text-secondary" />
+                  </div>
+                  <p className="text-sm font-medium">From gallery</p>
+                  <p className="text-xs text-muted-foreground">Choose existing</p>
                 </button>
               </div>
             ) : (
