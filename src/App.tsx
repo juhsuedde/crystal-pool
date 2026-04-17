@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useDeepLinks } from "@/hooks/useDeepLinks";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Rescue from "./pages/Rescue";
@@ -13,6 +14,21 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppRoutes = () => {
+  useDeepLinks();
+  return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route element={<Layout />}>
+        <Route path="/" element={<Index />} />
+        <Route path="/rescue" element={<Rescue />} />
+        <Route path="/track" element={<Track />} />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -20,15 +36,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route element={<Layout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/rescue" element={<Rescue />} />
-              <Route path="/track" element={<Track />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppRoutes />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
