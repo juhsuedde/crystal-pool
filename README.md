@@ -1,6 +1,6 @@
 # 💎 Crystal Pool
 
-Aplicativo inteligente de manutenção de piscinas que combina **diagnóstico de emergência por IA** com **acompanhamento preventivo de longo prazo**.
+Concepção e desenvolvimento end-to-end de aplicativo mobile para manutenção de piscinas, utilizando React Native, Firebase e OpenAI Vision. Construído com auxílio de agentes de IA e ferramentas no-code, com foco em validação de problema, UX para uso ao ar livre e três personas distintas (homeowner, profissional, usuário em emergência).
 
 ## Tecnologias
 
@@ -45,6 +45,17 @@ Dados de convidados são migrados automaticamente para a nuvem ao fazer login.
 
 ---
 
+## 🧠 Decisões de Produto
+
+- **Guest Mode sem login**: Reduz atrito em emergências.
+  Dados migram para nuvem depois, convertendo usuário sem perder contexto.
+- **Volume como input obrigatório**: Sem saber litragem, qualquer dosagem de IA
+  seria perigosa. Isso bloqueia o SOS Mode até o usuário preencher.
+- **Escolha por PWA primeiro**: Validar hipótese antes de investir na publicação do app.
+  Capacitor entra só após Product-Market Fit inicial.
+
+---
+
 ## 🚀 Setup Local
 
 ### Pré-requisitos
@@ -85,29 +96,6 @@ npm run dev        # Inicia em http://localhost:8080
 npm run build      # Build de produção
 npm run test       # Testes (vitest)
 ```
-
----
-
-## 📱 Publicação nas Lojas (Roadmap)
-
-O app é uma PWA / web app. Para publicar na **App Store** e **Google Play**, o caminho recomendado é usar o [Capacitor](https://capacitorjs.com):
-
-```bash
-npm install @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android
-npx cap init
-npx cap add ios
-npx cap add android
-```
-
-**Checklist antes da submissão:**
-
-- [ ] Corrigir nome da variável de ambiente do Supabase (`VITE_SUPABASE_ANON_KEY`)
-- [ ] Testar persistência de sessão em WebView nativo (substituir `localStorage` por `@capacitor/preferences` se necessário)
-- [ ] Configurar permissões de câmera no `AndroidManifest.xml` e `Info.plist`
-- [ ] Testar o fluxo de upload de foto no iOS e Android
-- [ ] Criar ícones e splash screens nativos
-- [ ] Conta Apple Developer ($99/ano) e Google Play ($25 único)
-- [ ] Política de privacidade (obrigatória para ambas as lojas)
 
 ---
 
@@ -155,3 +143,13 @@ supabase/
 - tipo: `chemical | filter | reading | rescue | note`
 
 Ambas as tabelas têm Row Level Security (RLS) ativado — cada usuário acessa apenas seus próprios dados.
+
+---
+
+## 🚦 Status
+
+- [x] MVP funcional (rescue + track + auth)
+- [x] Deploy em produção (Vercel/Netlify)
+- [ ] Testes com 5+ usuários reais (pool owners)
+- [ ] Publicação App Store / Play Store (Capacitor)
+- [ ] Monetização (Stripe para Pro Keeper)
