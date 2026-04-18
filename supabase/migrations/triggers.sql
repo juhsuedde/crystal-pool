@@ -4,34 +4,24 @@
 -- 1. Function to recalculate pool status based on latest readings
 CREATE OR REPLACE FUNCTION update_pool_status()
 RETURNS TRIGGER AS $$
-DECLARE
-  v_ph NUMERIC(4,2);
-  v_chlorine NUMERIC(4,2);
 BEGIN
-  -- Fetch latest readings into local variables
-  SELECT ph, chlorine INTO v_ph, v_chlorine
-  FROM pool_logs
-  WHERE pool_id = NEW.pool_id AND type = 'reading'
-  ORDER BY created_at DESC
-  LIMIT 1;
-
-  -- Update pool status using local variables
-  UPDATE pools p SET
+  -- Update pool status directly using JSONB extraction from NEW
+  UPDATE pools SET
     status = CASE
-      WHEN v_ph IS NULL AND v_chlorine IS NULL THEN 'offline'
-      WHEN v_ph < 6.8 OR v_ph > 8.0 THEN 'critical'
-      WHEN v_chlorine < 0.5 THEN 'critical'
-      WHEN v_ph < 7.2 OR v_ph > 7.6 THEN 'warning'
-      WHEN v_chlorine < 1.0 OR v_chlorine > 5.0 THEN 'warning'
+      WHEN (NEW.values->>'ph') IS NULL AND (NEW.values->>'chlorine') IS NULL THEN 'offline'
+      WHEN ((NEW.values->>'ph')::NUMERIC(4,2) < 6.8) OR ((NEW.values->>'ph')::NUMERIC(4,2) > 8.0) THEN 'critical'
+      WHEN ((NEW.values->>'chlorine')::NUMERIC(4,2) < 0.5) THEN 'critical'
+      WHEN ((NEW.values->>'ph')::NUMERIC(4,2) < 7.2) OR ((NEW.values->>'ph')::NUMERIC(4,2) > 7.6) THEN 'warning'
+      WHEN ((NEW.values->>'chlorine')::NUMERIC(4,2) < 1.0) OR ((NEW.values->>'chlorine')::NUMERIC(4,2) > 5.0) THEN 'warning'
       ELSE 'crystal'
     END,
     updated_at = NOW(),
     last_reading_at = NEW.created_at
-  WHERE p.id = NEW.pool_id;
+  WHERE id = NEW.pool_id;
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- 2. Trigger to call function after each pool_logs insert
 DROP TRIGGER IF EXISTS on_pool_logs_status_update ON pool_logs;
