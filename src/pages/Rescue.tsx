@@ -11,6 +11,32 @@ import { useNavigate } from "react-router-dom";
 import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
 
+const savePhotoToStorage = async (photoDataUrl: string, poolId: string): Promise<string | null> => {
+  if (!photoDataUrl || !photoDataUrl.startsWith("data:")) return null;
+  
+  try {
+    const base64Data = photoDataUrl.split(",")[1];
+    const binary = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    const ext = photoDataUrl.includes("/png") ? "png" : "jpg";
+    const filePath = `rescue/${poolId}/${Date.now()}.${ext}`;
+    
+    const { error } = await supabase.storage
+      .from("rescue-photos")
+      .upload(filePath, binary, { contentType: `image/${ext}` });
+    
+    if (error) {
+      console.error("Failed to upload photo:", error);
+      return null;
+    }
+    
+    const { data: urlData } = supabase.storage.from("rescue-photos").getPublicUrl(filePath);
+    return urlData.publicUrl;
+  } catch (e) {
+    console.error("Photo upload error:", e);
+    return null;
+  }
+};
+
 const SYMPTOMS = [
   { id: "green", label: "Green Water", emoji: "🟢" },
   { id: "cloudy", label: "Cloudy / Milky", emoji: "☁️" },
@@ -117,6 +143,8 @@ const Rescue = () => {
       if (data?.error) throw new Error(data.error);
       setResult(data as Diagnosis);
       if (pool) {
+        const photoUrl = user ? await savePhotoToStorage(photo, pool.id) : null;
+        
         const logEntry = {
           id: crypto.randomUUID(),
           poolId: pool.id,
@@ -129,6 +157,7 @@ const Rescue = () => {
             steps: (data as Diagnosis).steps,
             chemicals: (data as Diagnosis).chemicals,
             timeline: (data as Diagnosis).timeline,
+            photoUrl,
           },
           createdAt: new Date().toISOString(),
         };
