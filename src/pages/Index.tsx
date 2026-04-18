@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, LifeBuoy, Sparkles, Settings, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import PoolCard from "@/components/PoolCard";
+import SwipeToDelete from "@/components/SwipeToDelete";
 import { Pool, loadPools, seedDemoIfEmpty, upsertPool, computeStatus, deletePool } from "@/lib/storage";
 import { fetchPoolsCloud, upsertPoolCloud, deletePoolCloud } from "@/lib/cloudStorage";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ import {
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [pools, setPools] = useState<Pool[]>([]);
   const [open, setOpen] = useState(false);
   const [editPool, setEditPool] = useState<Pool | null>(null);
@@ -82,7 +85,7 @@ const Index = () => {
       }
       await refresh();
       setName(""); setVolume("50000"); setOpen(false);
-      toast.success(`${trimmed} added`);
+      toast.success(t("index.poolAdded", { name: trimmed }));
     } catch (e: any) {
       toast.error(e.message ?? "Failed to add pool");
     }
@@ -107,10 +110,15 @@ const Index = () => {
       }
       await refresh();
       setName(""); setVolume("50000"); setEditOpen(false); setEditPool(null);
-      toast.success("Pool updated!");
+      toast.success(t("index.poolUpdated"));
     } catch (e: any) {
       toast.error(e.message ?? "Failed to update pool");
     }
+  };
+
+  const requestDelete = (pool: Pool) => {
+    setPoolToDelete(pool);
+    setDeleteOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -123,7 +131,7 @@ const Index = () => {
       }
       await refresh();
       setDeleteOpen(false); setPoolToDelete(null);
-      toast.success("Pool removed");
+      toast.success(t("index.poolRemoved"));
     } catch (e: any) {
       toast.error(e.message ?? "Failed to remove pool");
     }
@@ -141,48 +149,48 @@ const Index = () => {
       {!user && (
         <div className="glass-card rounded-2xl p-4 flex items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            <span className="text-foreground font-medium">Guest mode</span> · Sign in to sync across devices
+            <span className="text-foreground font-medium">{t("index.guestBanner")}</span> · {t("index.guestSync")}
           </p>
           <Button size="sm" variant="secondary" onClick={() => navigate("/auth")} className="rounded-full shrink-0">
-            Sign in
+            {t("common.signIn")}
           </Button>
         </div>
       )}
 
       {isProKeeper && (
         <div className="glass-card rounded-2xl p-3 bg-secondary/10 border-secondary/30">
-          <p className="text-xs text-secondary font-medium">Pro Keeper Mode</p>
-          <p className="text-xs text-muted-foreground">Managing {pools.length} pools</p>
+          <p className="text-xs text-secondary font-medium">{t("index.proKeeper")}</p>
+          <p className="text-xs text-muted-foreground">{t("index.managingPools", { count: pools.length })}</p>
         </div>
       )}
 
       <section>
         <div className="flex items-end justify-between mb-1">
           <h2 className="text-2xl font-semibold tracking-tight">
-            {isProKeeper ? "Your Pools" : isHomeowner ? "My Pool" : "Pools"}
+            {isProKeeper ? t("index.yourPools") : isHomeowner ? t("index.myPool") : t("index.pools")}
           </h2>
           {isHomeowner && pools.length > 0 && !user && (
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="rounded-full h-8 w-8 p-0">
+                <Button size="sm" variant="ghost" className="rounded-full h-8 w-8 p-0" onClick={() => openEdit(pools[0])}>
                   <Settings className="w-4 h-4" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-card border-border">
                 <DialogHeader>
-                  <DialogTitle>Edit Pool</DialogTitle>
+                  <DialogTitle>{t("index.editPool")}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-1.5">
-                    <Label htmlFor="pname">Pool name</Label>
-                    <Input id="pname" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Pool" />
+                    <Label htmlFor="pname">{t("index.poolName")}</Label>
+                    <Input id="pname" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("index.myPool")} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="pvol">Volume (liters)</Label>
+                    <Label htmlFor="pvol">{t("index.volumeLiters")}</Label>
                     <Input id="pvol" type="number" inputMode="numeric" value={volume} onChange={(e) => setVolume(e.target.value)} />
                   </div>
                   <Button onClick={updatePool} className="w-full bg-gradient-cyan text-secondary-foreground hover:opacity-90">
-                    Save
+                    {t("common.save")}
                   </Button>
                 </div>
               </DialogContent>
@@ -192,24 +200,24 @@ const Index = () => {
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" variant="secondary" className="rounded-full font-medium">
-                  <Plus className="w-4 h-4 mr-1" /> Add
+                  <Plus className="w-4 h-4 mr-1" /> {t("common.add")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-card border-border">
                 <DialogHeader>
-                  <DialogTitle>Add a pool</DialogTitle>
+                  <DialogTitle>{t("index.addAPool")}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-1.5">
-                    <Label htmlFor="pname">Pool name</Label>
+                    <Label htmlFor="pname">{t("index.poolName")}</Label>
                     <Input id="pname" value={name} onChange={(e) => setName(e.target.value)} placeholder="Backyard Oasis" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="pvol">Volume (liters)</Label>
+                    <Label htmlFor="pvol">{t("index.volumeLiters")}</Label>
                     <Input id="pvol" type="number" inputMode="numeric" value={volume} onChange={(e) => setVolume(e.target.value)} />
                   </div>
                   <Button onClick={addPool} className="w-full bg-gradient-cyan text-secondary-foreground hover:opacity-90">
-                    Create pool
+                    {t("index.createPool")}
                   </Button>
                 </div>
               </DialogContent>
@@ -218,10 +226,10 @@ const Index = () => {
         </div>
         <p className="text-sm text-muted-foreground">
           {isProKeeper
-            ? `${summary.ok} optimal · ${summary.attention} need attention`
+            ? t("index.okAttention", { ok: summary.ok, attention: summary.attention })
             : pools.length > 0
-              ? pools[0].status === "crystal" ? "✓ Optimal" : pools[0].status === "offline" ? "No readings yet" : "⚠ Needs attention"
-              : "Add your pool to start tracking"}
+              ? pools[0].status === "crystal" ? `✓ ${t("common.optimal")}` : pools[0].status === "offline" ? t("common.noReadings") : `⚠ ${t("common.needsAttention")}`
+              : t("index.addPoolHint")}
         </p>
       </section>
 
@@ -239,10 +247,10 @@ const Index = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-0.5">
                 <Sparkles className="w-3.5 h-3.5 text-secondary-foreground/80" />
-                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-secondary-foreground/80">AI Diagnosis</span>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-secondary-foreground/80">{t("index.aiDiagnosis")}</span>
               </div>
-              <h3 className="text-lg font-bold text-secondary-foreground leading-tight">Save My Pool</h3>
-              <p className="text-xs text-secondary-foreground/80 mt-0.5">Photo + symptoms → instant recovery plan</p>
+              <h3 className="text-lg font-bold text-secondary-foreground leading-tight">{t("index.saveMyPool")}</h3>
+              <p className="text-xs text-secondary-foreground/80 mt-0.5">{t("index.aiDiagnosisDesc")}</p>
             </div>
           </div>
         </button>
@@ -256,43 +264,51 @@ const Index = () => {
                 <div className="w-12 h-12 mx-auto rounded-2xl bg-secondary/15 flex items-center justify-center mb-3">
                   <Plus className="w-5 h-5 text-secondary" />
                 </div>
-                <p className="text-sm text-muted-foreground">Tap to add your pool</p>
+                <p className="text-sm text-muted-foreground">{t("index.tapToAdd")}</p>
               </button>
             </DialogTrigger>
             <DialogContent className="bg-card border-border">
               <DialogHeader>
-                <DialogTitle>Add your pool</DialogTitle>
+                <DialogTitle>{t("index.addYourPool")}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="pname">Pool name</Label>
-                  <Input id="pname" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Pool" />
+                  <Label htmlFor="pname">{t("index.poolName")}</Label>
+                  <Input id="pname" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("index.myPool")} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="pvol">Volume (liters)</Label>
+                  <Label htmlFor="pvol">{t("index.volumeLiters")}</Label>
                   <Input id="pvol" type="number" inputMode="numeric" value={volume} onChange={(e) => setVolume(e.target.value)} />
                 </div>
                 <Button onClick={addPool} className="w-full bg-gradient-cyan text-secondary-foreground hover:opacity-90">
-                  Create pool
+                  {t("index.createPool")}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         ) : (
           <>
+            {pools.length > 0 && (
+              <p className="text-[11px] text-muted-foreground/70 px-1">← {t("common.swipeToDelete")}</p>
+            )}
             {isProKeeper && pools.map(pool => (
-              <div key={pool.id} className="relative group">
-                <PoolCard pool={pool} onClick={() => navigate(`/track?pool=${pool.id}`)} />
-                <button
-                  onClick={(e) => { e.stopPropagation(); setPoolToDelete(pool); setDeleteOpen(true); }}
-                  className="absolute top-3 right-3 p-2 rounded-lg bg-destructive/80 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+              <SwipeToDelete key={pool.id} onDelete={() => requestDelete(pool)}>
+                <div className="relative group">
+                  <PoolCard pool={pool} onClick={() => navigate(`/track?pool=${pool.id}`)} />
+                  <button
+                    onClick={(e) => { e.stopPropagation(); requestDelete(pool); }}
+                    className="absolute top-3 right-3 p-2 rounded-lg bg-destructive/80 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label={t("common.delete")}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </SwipeToDelete>
             ))}
             {isHomeowner && pools.map(pool => (
-              <PoolCard key={pool.id} pool={pool} onClick={() => navigate("/track")} />
+              <SwipeToDelete key={pool.id} onDelete={() => requestDelete(pool)}>
+                <PoolCard pool={pool} onClick={() => navigate("/track")} />
+              </SwipeToDelete>
             ))}
           </>
         )}
@@ -301,15 +317,15 @@ const Index = () => {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Pool</AlertDialogTitle>
+            <AlertDialogTitle>{t("index.deletePool")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{poolToDelete?.name}"? This action cannot be undone.
+              {t("index.deleteConfirm", { name: poolToDelete?.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
