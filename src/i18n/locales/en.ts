@@ -7,7 +7,7 @@ const en = {
   },
   app: {
     title: "Crystal Pool",
-    tagline: "Maintenance OS",
+    tagline: "Pool Maintenance App",
   },
   common: {
     signIn: "Sign in",
