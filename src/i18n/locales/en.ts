@@ -86,6 +86,17 @@ const en = {
     reminderSet: "Reminder set",
     notificationDenied: "Please enable notifications in settings",
   },
+  upgrade: {
+    title: "Unlock Pro Keeper",
+    subtitle: "Manage unlimited pools, generate PDF reports, and more.",
+    features: {
+      unlimited: "Unlimited pools",
+      pdf: "PDF maintenance reports",
+      priority: "Priority AI support",
+    },
+    button: "Upgrade to Pro",
+    monthly: "/month",
+  },
   rescue: {
     badge: "Emergency Rescue",
     title: "Save My Pool",

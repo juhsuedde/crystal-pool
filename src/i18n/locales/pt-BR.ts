@@ -88,6 +88,17 @@ const pt: Translation = {
     reminderSet: "Lembrete configurado",
     notificationDenied: "Ative as notificações nas configurações",
   },
+  upgrade: {
+    title: "Desbloquear Pro Keeper",
+    subtitle: "Gerencie piscinas ilimitadas, gere relatórios PDF e mais.",
+    features: {
+      unlimited: "Piscinas ilimitadas",
+      pdf: "Relatórios PDF",
+      priority: "Suporte prioritário",
+    },
+    button: "Upgrade para Pro",
+    monthly: "/mês",
+  },
   rescue: {
     badge: "Resgate de Emergência",
     title: "Salve Minha Piscina",
