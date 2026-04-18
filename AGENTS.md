@@ -62,7 +62,15 @@ const getUserMode = (user: User | null, poolCount: number): 'guest' | 'homeowner
 
 ### Database Schema (Supabase)
 ```sql
--- pools table needs these columns:
+-- profiles table (created automatically via trigger on auth.users)
+- id: UUID (references auth.users)
+- display_name: TEXT
+- tier: TEXT ('guest' | 'homeowner' | 'pro')
+- preferences: JSONB
+- created_at: TIMESTAMPTZ
+- updated_at: TIMESTAMPTZ
+
+-- pools table:
 - id: UUID
 - user_id: UUID (references auth.users)
 - name: TEXT
