@@ -89,24 +89,53 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check guest daily limit (3 free rescues per day)
+    // Verify Supabase JWT and extract user_id
     const authHeader = req.headers.get("authorization");
-    const today = new Date().toISOString().split("T")[0];
-    
-    if (authHeader) {
-      // Check user's rescue count today from Supabase
-      const checkRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/pool_logs?type=eq.rescue&created_at=gte.${today}T00:00:00&select=id`,
-        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-      );
-      const rescueLogs = await checkRes.json();
-      if (Array.isArray(rescueLogs) && rescueLogs.length >= USER_DAILY_LIMIT) {
-        return new Response(JSON.stringify({ 
-          error: "Daily limit reached (1 free diagnosis/day). Come back tomorrow, or sign in to unlock unlimited AI diagnoses." 
-        }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let userId: string | null = null;
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: { 
+          apikey: SUPABASE_KEY, 
+          Authorization: `Bearer ${token}` 
+        },
+      });
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        userId = userData.id;
+      } else if (authHeader.length > 20) {
+        // Has auth header but invalid token - reject unauthenticated access
+        return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+    }
+
+    // Check guest daily limit (1 free rescue per day for guests)
+    const today = new Date().toISOString().split("T")[0];
+    
+    if (!userId) {
+      // Guest IP-based limit would go here, but we require auth for proper access
+      return new Response(JSON.stringify({ 
+        error: "Authentication required. Sign in to use AI diagnosis." 
+      }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check user's rescue count today from Supabase
+    const checkRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/pool_logs?user_id=eq.${userId}&type=eq.rescue&created_at=gte.${today}T00:00:00&select=id`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const rescueLogs = await checkRes.json();
+    if (Array.isArray(rescueLogs) && rescueLogs.length >= USER_DAILY_LIMIT) {
+      return new Response(JSON.stringify({ 
+        error: "Daily limit reached (1 free diagnosis/day). Come back tomorrow, or sign in to unlock unlimited AI diagnoses." 
+      }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const body = (await req.json()) as Body;
