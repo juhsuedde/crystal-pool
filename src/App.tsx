@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Rescue from "./pages/Rescue";
 import Track from "./pages/Track";
 import Auth from "./pages/Auth";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Index />} />
         <Route path="/rescue" element={<Rescue />} />
         <Route path="/track" element={<Track />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
