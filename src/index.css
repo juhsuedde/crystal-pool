@@ -5,8 +5,68 @@
 /* Crystal Pool — Aquatic Prism design system. All colors HSL. */
 
 @layer base {
+  /* Light mode (Aqua Clarity) — default */
   :root {
-    /* Deep aquatic palette */
+    --background: 200 40% 98%;
+    --foreground: 215 35% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 35% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 35% 20%;
+
+    /* Brand: bright sky cyan */
+    --primary: 195 85% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Accent: same brand cyan for highlights */
+    --secondary: 195 85% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 200 30% 94%;
+    --muted-foreground: 215 15% 45%;
+
+    --accent: 195 85% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 25% 88%;
+    --input: 200 25% 88%;
+    --ring: 195 85% 50%;
+
+    --radius: 0.875rem;
+
+    --status-crystal: 195 90% 50%;
+    --status-warning: 38 95% 55%;
+    --status-critical: 18 90% 55%;
+    --status-algae: 140 60% 45%;
+    --status-cloudy: 210 12% 55%;
+
+    --gradient-deep: linear-gradient(160deg, hsl(200 50% 98%) 0%, hsl(195 60% 95%) 50%, hsl(190 70% 92%) 100%);
+    --gradient-cyan: linear-gradient(135deg, hsl(195 85% 55%) 0%, hsl(200 90% 48%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(0 0% 100% / 0.9) 0%, hsl(200 40% 98% / 0.9) 100%);
+
+    --shadow-glow: 0 0 30px hsl(195 85% 50% / 0.18);
+    --shadow-card: 0 4px 20px hsl(200 40% 30% / 0.08);
+    --shadow-elevated: 0 12px 40px hsl(200 40% 30% / 0.12);
+
+    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 200 40% 98%;
+    --sidebar-foreground: 215 35% 20%;
+    --sidebar-primary: 195 85% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 200 30% 94%;
+    --sidebar-accent-foreground: 215 35% 20%;
+    --sidebar-border: 200 25% 88%;
+    --sidebar-ring: 195 85% 50%;
+  }
+
+  /* Dark mode (original Aquatic Prism) */
+  .dark {
     --background: 215 60% 8%;
     --foreground: 195 30% 96%;
 
@@ -16,11 +76,9 @@
     --popover: 215 55% 10%;
     --popover-foreground: 195 30% 96%;
 
-    /* Brand: deep midnight blue */
     --primary: 215 70% 18%;
     --primary-foreground: 190 90% 92%;
 
-    /* Accent: bright cyan */
     --secondary: 190 85% 60%;
     --secondary-foreground: 215 70% 12%;
 
@@ -37,26 +95,19 @@
     --input: 215 35% 18%;
     --ring: 190 85% 60%;
 
-    --radius: 0.875rem;
+    --status-crystal: 195 90% 55%;
+    --status-warning: 45 95% 60%;
+    --status-critical: 22 95% 58%;
+    --status-algae: 140 70% 50%;
+    --status-cloudy: 210 12% 60%;
 
-    /* Pool status colors */
-    --status-crystal: 195 90% 55%;     /* Crystal Blue (Optimal) */
-    --status-warning: 45 95% 60%;       /* Yellow */
-    --status-critical: 22 95% 58%;      /* Orange */
-    --status-algae: 140 70% 50%;        /* Green Alert */
-    --status-cloudy: 210 12% 60%;       /* Gray Cloudy */
-
-    /* Gradients */
     --gradient-deep: linear-gradient(160deg, hsl(215 60% 8%) 0%, hsl(215 70% 14%) 50%, hsl(200 65% 18%) 100%);
     --gradient-cyan: linear-gradient(135deg, hsl(190 85% 60%) 0%, hsl(200 90% 50%) 100%);
     --gradient-card: linear-gradient(160deg, hsl(215 45% 14% / 0.85) 0%, hsl(215 50% 11% / 0.85) 100%);
 
-    /* Shadows */
     --shadow-glow: 0 0 40px hsl(190 85% 60% / 0.25);
     --shadow-card: 0 8px 30px hsl(215 80% 4% / 0.4);
     --shadow-elevated: 0 20px 50px hsl(215 80% 4% / 0.6);
-
-    --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 215 60% 8%;
     --sidebar-foreground: 195 30% 96%;

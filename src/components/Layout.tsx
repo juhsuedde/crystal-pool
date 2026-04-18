@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { migrateGuestDataIfNeeded } from "@/lib/cloudStorage";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navItems = [
   { to: "/", label: "Home", icon: LayoutGrid, end: true },
@@ -36,20 +37,23 @@ const Layout = () => {
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Maintenance OS</p>
             </div>
           </div>
-          {user ? (
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-xs font-semibold text-secondary">
-                {initial}
-              </div>
-              <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
-                <LogOut className="w-4 h-4" />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {user ? (
+              <>
+                <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center text-xs font-semibold text-secondary">
+                  {initial}
+                </div>
+                <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => navigate("/auth")} className="rounded-full">
+                <LogIn className="w-3.5 h-3.5 mr-1.5" /> Sign in
               </Button>
-            </div>
-          ) : (
-            <Button variant="outline" size="sm" onClick={() => navigate("/auth")} className="rounded-full">
-              <LogIn className="w-3.5 h-3.5 mr-1.5" /> Sign in
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </header>
 
