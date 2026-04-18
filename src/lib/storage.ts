@@ -64,10 +64,15 @@ export const clearGuestData = () => {
   localStorage.removeItem(GUEST_EXPIRY_KEY);
 };
 
-// Detect user mode based on user and pool count
-export const getUserMode = (user: { id: string } | null, poolCount: number): UserMode => {
+export interface UserProfile {
+  subscription_tier?: "homeowner" | "pro";
+  subscription_status?: "active" | "past_due" | "trialing";
+}
+
+// Detect user mode based on user, pool count, and subscription
+export const getUserMode = (user: { id: string } | null, poolCount: number, profile?: UserProfile): UserMode => {
   if (!user) return "guest";
-  if (poolCount > 3) return "pro";
+  if (profile?.subscription_tier === "pro" || profile?.subscription_status === "active" || poolCount > 3) return "pro";
   return "homeowner";
 };
 
