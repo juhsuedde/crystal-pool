@@ -5,6 +5,10 @@ const corsHeaders = {
 };
 
 const RATE_LIMIT = 10; // Max requests per minute per IP
+const USER_DAILY_LIMIT = 3; // Free daily rescues for guests (as per spec)
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
 const rateLimit = new Map<string, number>();
 
 interface Body {
@@ -83,6 +87,26 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Check guest daily limit (3 free rescues per day)
+    const authHeader = req.headers.get("authorization");
+    const today = new Date().toISOString().split("T")[0];
+    
+    if (authHeader) {
+      // Check user's rescue count today from Supabase
+      const checkRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/pool_logs?type=eq.rescue&created_at=gte.${today}T00:00:00&select=id`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const rescueLogs = await checkRes.json();
+      if (Array.isArray(rescueLogs) && rescueLogs.length >= USER_DAILY_LIMIT) {
+        return new Response(JSON.stringify({ 
+          error: "Daily limit reached (3 free rescues/day). Sign in or subscribe for unlimited AI diagnoses." 
+        }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const body = (await req.json()) as Body;
