@@ -5,40 +5,35 @@
 CREATE OR REPLACE FUNCTION update_pool_status()
 RETURNS TRIGGER AS $$
 DECLARE
-  r_ph NUMERIC;
-  r_chlorine NUMERIC;
-  new_status TEXT;
+  _pool_ph NUMERIC;
+  _pool_chlorine NUMERIC;
+  _new_status TEXT;
 BEGIN
   -- Get latest readings for the pool (only type 'reading')
-  SELECT ph, chlorine INTO r_ph, r_chlorine
+  SELECT ph, chlorine INTO _pool_ph, _pool_chlorine
   FROM pool_logs
   WHERE pool_id = NEW.pool_id AND type = 'reading' AND ph IS NOT NULL
   ORDER BY created_at DESC
   LIMIT 1;
   
-  -- Calculate status based on chemistry rules:
-  -- Crystal: pH 7.2-7.6, chlorine 1.0-3.0
-  -- Warning: pH < 7.2 OR > 7.6 OR chlorine < 1.0 OR > 5.0
-  -- Critical: pH < 6.8 OR > 8.0 OR chlorine < 0.5
-  -- Offline: no readings
-  
-  IF r_ph IS NULL AND r_chlorine IS NULL THEN
-    new_status := 'offline';
-  ELSIF r_ph IS NOT NULL AND (r_ph < 6.8 OR r_ph > 8.0) THEN
-    new_status := 'critical';
-  ELSIF r_chlorine IS NOT NULL AND r_chlorine < 0.5 THEN
-    new_status := 'critical';
-  ELSIF r_ph IS NOT NULL AND (r_ph < 7.2 OR r_ph > 7.6) THEN
-    new_status := 'warning';
-  ELSIF r_chlorine IS NOT NULL AND (r_chlorine < 1.0 OR r_chlorine > 5.0) THEN
-    new_status := 'warning';
+  -- Calculate status based on chemistry rules
+  IF _pool_ph IS NULL AND _pool_chlorine IS NULL THEN
+    _new_status := 'offline';
+  ELSIF _pool_ph IS NOT NULL AND (_pool_ph < 6.8 OR _pool_ph > 8.0) THEN
+    _new_status := 'critical';
+  ELSIF _pool_chlorine IS NOT NULL AND _pool_chlorine < 0.5 THEN
+    _new_status := 'critical';
+  ELSIF _pool_ph IS NOT NULL AND (_pool_ph < 7.2 OR _pool_ph > 7.6) THEN
+    _new_status := 'warning';
+  ELSIF _pool_chlorine IS NOT NULL AND (_pool_chlorine < 1.0 OR _pool_chlorine > 5.0) THEN
+    _new_status := 'warning';
   ELSE
-    new_status := 'crystal';
+    _new_status := 'crystal';
   END IF;
   
   -- Update the pool status and last_reading_at
   UPDATE pools 
-  SET status = new_status, 
+  SET status = _new_status, 
       updated_at = NOW(),
       last_reading_at = NEW.created_at
   WHERE id = NEW.pool_id;
