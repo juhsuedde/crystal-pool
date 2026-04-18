@@ -7,6 +7,8 @@ target 'App' do
   # Capacitor plugins
   pod 'Capacitor', :path => '../node_modules/@capacitor/core'
   pod 'CapacitorCamera', :path => '../node_modules/@capacitor/camera'
+  pod 'CapacitorPushNotifications', :path => '../node_modules/@capacitor/push-notifications'
+  pod 'CapacitorLocalNotifications', :path => '../node_modules/@capacitor/local-notifications'
 
   post_install do |installer|
     installer.pods_project.targets.each do |target|

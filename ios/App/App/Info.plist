@@ -45,7 +45,15 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
+<key>UIViewControllerBasedStatusBarAppearance</key>
+ 	<true/>
+ 	<key>UIBackgroundModes</key>
+ 	<array>
+ 		<string>remote-notification</string>
+ 	</array>
+ 	<key>NSPhotoLibraryUsageDescription</key>
+ 	<string>Need camera access for pool photos</string>
+ 	<key>NSCameraUsageDescription</key>
+ 	<string>Need camera access for pool photos</string>
 </dict>
 </plist>

@@ -82,6 +82,11 @@ const pt: Translation = {
       alkalinity: "Alcalinidade (ppm)",
       temp: "Temp (°C)",
     },
+    reminders: "Lembretes",
+    reminderOff: "Desligado",
+    reminderDays: "A cada {{days}} dias",
+    reminderSet: "Lembrete configurado",
+    notificationDenied: "Ative as notificações nas configurações",
   },
   rescue: {
     badge: "Resgate de Emergência",

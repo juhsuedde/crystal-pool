@@ -80,6 +80,11 @@ const en = {
       alkalinity: "Alkalinity (ppm)",
       temp: "Temp (°C)",
     },
+    reminders: "Reminders",
+    reminderOff: "Off",
+    reminderDays: "Every {{days}} days",
+    reminderSet: "Reminder set",
+    notificationDenied: "Please enable notifications in settings",
   },
   rescue: {
     badge: "Emergency Rescue",

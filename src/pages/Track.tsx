@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { addLog, loadLogs, loadPools, upsertPool, computeStatus, deletePool, type LogEntry, type Pool } from "@/lib/storage";
 import { addLogCloud, fetchLogsCloud, fetchPoolsCloud, upsertPoolCloud, deletePoolCloud } from "@/lib/cloudStorage";
+import { scheduleReadingReminder, cancelAllReminders, setReminderDays, getReminderDays, requestLocalPermissions } from "@/lib/notifications";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +35,7 @@ const Track = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [poolToDelete, setPoolToDelete] = useState<Pool | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [reminderDays, setReminderDaysState] = useState<number | null>(null);
 
   const [ph, setPh] = useState("");
   const [chlorine, setChlorine] = useState("");
@@ -41,6 +43,10 @@ const Track = () => {
   const [temp, setTemp] = useState("");
 
   const isProKeeper = user && pools.length > 1;
+
+  useEffect(() => {
+    setReminderDaysState(getReminderDays());
+  }, []);
 
   const QUICK_ACTIONS = [
     { id: "chlorine", label: t("track.actions.chlorine"), icon: Beaker },
@@ -281,6 +287,39 @@ const Track = () => {
           </ul>
         )}
       </section>
+
+      {pool && (
+        <section className="glass-card rounded-2xl p-5 space-y-4">
+          <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{t("track.reminders")}</h3>
+          <div className="flex items-center gap-3">
+            <select
+              value={reminderDays ?? ""}
+              onChange={async (e) => {
+                const days = e.target.value ? parseInt(e.target.value) : null;
+                setReminderDaysState(days);
+                if (days) {
+                  const allowed = await requestLocalPermissions();
+                  if (allowed) {
+                    setReminderDays(days);
+                    await scheduleReadingReminder(pool.name, days);
+                    toast.success(t("track.reminderSet"));
+                  } else {
+                    toast.error(t("track.notificationDenied"));
+                  }
+                } else {
+                  await cancelAllReminders();
+                }
+              }}
+              className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm"
+            >
+              <option value="">{t("track.reminderOff")}</option>
+              <option value="3">{t("track.reminderDays", { days: 3 })}</option>
+              <option value="7">{t("track.reminderDays", { days: 7 })}</option>
+              <option value="14">{t("track.reminderDays", { days: 14 })}</option>
+            </select>
+          </div>
+        </section>
+      )}
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
