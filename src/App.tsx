@@ -19,6 +19,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/callback" element={<Auth />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Index />} />
         <Route path="/rescue" element={<Rescue />} />

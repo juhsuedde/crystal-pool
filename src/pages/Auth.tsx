@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -49,13 +48,18 @@ const Auth = () => {
   const handleGoogle = async () => {
     setBusy(true);
     try {
-      const redirectUri = Capacitor.isNativePlatform()
+      const redirectUrl = Capacitor.isNativePlatform()
         ? "crystalpool://auth/callback"
-        : window.location.origin;
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: redirectUri,
+        : `${window.location.origin}/auth/callback`;
+      
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: redirectUrl,
+        },
       });
-      if (result.error) throw result.error;
+      
+      if (error) throw error;
     } catch (err: any) {
       toast.error(err.message ?? "Google sign-in failed");
       setBusy(false);
