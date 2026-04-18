@@ -86,8 +86,16 @@ Deno.serve(async (req) => {
     }
 
     const body = (await req.json()) as Body;
+    
+    // Validate required fields
+    if (!body.volumeLiters || body.volumeLiters < 100) {
+      return new Response(JSON.stringify({ error: "Pool volume is required and must be at least 100 liters" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
     const symptoms = Array.isArray(body.symptoms) ? body.symptoms : [];
-    const volume = body.volumeLiters ?? 50000;
+    const volume = body.volumeLiters;
 
     const userText = `Diagnose this pool. Volume: ${volume} liters (${(volume * 0.264).toFixed(0)} US gallons).
 Reported symptoms: ${symptoms.length ? symptoms.join(", ") : "none provided"}.
