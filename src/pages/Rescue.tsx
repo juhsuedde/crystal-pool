@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { loadPools, addLog, type Pool } from "@/lib/storage";
-import { fetchPoolsCloud } from "@/lib/cloudStorage";
+import { fetchPoolsCloud, addLogCloud } from "@/lib/cloudStorage";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -117,14 +117,23 @@ const Rescue = () => {
       if (data?.error) throw new Error(data.error);
       setResult(data as Diagnosis);
       if (pool) {
-        addLog({
+        const logEntry = {
           id: crypto.randomUUID(),
           poolId: pool.id,
-          type: "rescue",
+          type: "rescue" as const,
           action: "AI Diagnosis",
           detail: (data as Diagnosis).problem,
+          values: {
+            severity: (data as Diagnosis).severity,
+            cause: (data as Diagnosis).cause,
+            steps: (data as Diagnosis).steps,
+            chemicals: (data as Diagnosis).chemicals,
+            timeline: (data as Diagnosis).timeline,
+          },
           createdAt: new Date().toISOString(),
-        });
+        };
+        if (user) await addLogCloud(logEntry, user.id);
+        else addLog(logEntry);
       }
     } catch (e: any) {
       console.error(e);

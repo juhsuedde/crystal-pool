@@ -21,13 +21,15 @@ export interface Pool {
   clientName?: string;
 }
 
+export type LogType = "chemical" | "filter" | "reading" | "rescue" | "note";
+
 export interface LogEntry {
   id: string;
   poolId: string;
-  type: "chemical" | "filter" | "reading" | "rescue" | "note";
+  type: LogType;
   action: string;
   detail?: string;
-  values?: Partial<Pick<Pool, "ph" | "chlorine" | "alkalinity" | "temperature">>;
+  values?: Record<string, unknown>; // Allows any values (reading, rescue, etc.)
   createdAt: string;
 }
 
