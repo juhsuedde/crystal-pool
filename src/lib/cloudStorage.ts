@@ -32,10 +32,6 @@ const poolToRow = (p: Pool, userId: string) => ({
   alkalinity: p.alkalinity ?? null,
   temperature: p.temperature ?? null,
   last_reading_at: p.lastReadingAt ?? null,
-  // Pro mode fields
-  tags: p.tags ?? null,
-  address: p.address ?? null,
-  client_name: p.clientName ?? null,
 });
 
 const rowToLog = (r: any): LogEntry => ({
