@@ -5,12 +5,12 @@
 CREATE OR REPLACE FUNCTION update_pool_status()
 RETURNS TRIGGER AS $$
 DECLARE
-  latest_ph NUMERIC;
-  latest_chlorine NUMERIC;
+  r_ph NUMERIC;
+  r_chlorine NUMERIC;
   new_status TEXT;
 BEGIN
   -- Get latest readings for the pool (only type 'reading')
-  SELECT ph, chlorine INTO latest_ph, latest_chlorine
+  SELECT ph, chlorine INTO r_ph, r_chlorine
   FROM pool_logs
   WHERE pool_id = NEW.pool_id AND type = 'reading' AND ph IS NOT NULL
   ORDER BY created_at DESC
@@ -22,15 +22,15 @@ BEGIN
   -- Critical: pH < 6.8 OR > 8.0 OR chlorine < 0.5
   -- Offline: no readings
   
-  IF latest_ph IS NULL AND latest_chlorine IS NULL THEN
+  IF r_ph IS NULL AND r_chlorine IS NULL THEN
     new_status := 'offline';
-  ELSIF latest_ph IS NOT NULL AND (latest_ph < 6.8 OR latest_ph > 8.0) THEN
+  ELSIF r_ph IS NOT NULL AND (r_ph < 6.8 OR r_ph > 8.0) THEN
     new_status := 'critical';
-  ELSIF latest_chlorine IS NOT NULL AND latest_chlorine < 0.5 THEN
+  ELSIF r_chlorine IS NOT NULL AND r_chlorine < 0.5 THEN
     new_status := 'critical';
-  ELSIF latest_ph IS NOT NULL AND (latest_ph < 7.2 OR latest_ph > 7.6) THEN
+  ELSIF r_ph IS NOT NULL AND (r_ph < 7.2 OR r_ph > 7.6) THEN
     new_status := 'warning';
-  ELSIF latest_chlorine IS NOT NULL AND (latest_chlorine < 1.0 OR latest_chlorine > 5.0) THEN
+  ELSIF r_chlorine IS NOT NULL AND (r_chlorine < 1.0 OR r_chlorine > 5.0) THEN
     new_status := 'warning';
   ELSE
     new_status := 'crystal';
