@@ -5,7 +5,7 @@ const corsHeaders = {
 };
 
 const RATE_LIMIT = 10; // Max requests per minute per IP
-const USER_DAILY_LIMIT = 3; // Free daily rescues for guests (as per spec)
+const USER_DAILY_LIMIT = 1; // Free daily rescue for guests (as per spec)
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
       const rescueLogs = await checkRes.json();
       if (Array.isArray(rescueLogs) && rescueLogs.length >= USER_DAILY_LIMIT) {
         return new Response(JSON.stringify({ 
-          error: "Daily limit reached (3 free rescues/day). Sign in or subscribe for unlimited AI diagnoses." 
+          error: "Daily limit reached (1 free diagnosis/day). Come back tomorrow, or sign in to unlock unlimited AI diagnoses." 
         }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
