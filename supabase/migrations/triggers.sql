@@ -4,41 +4,29 @@
 -- 1. Function to recalculate pool status based on latest readings
 CREATE OR REPLACE FUNCTION update_pool_status()
 RETURNS TRIGGER AS $$
-DECLARE
-  v_ph NUMERIC;
-  v_chlorine NUMERIC;
-  v_status TEXT;
 BEGIN
-  -- Get latest readings for the pool (only type 'reading')
-  SELECT pool_logs.ph, pool_logs.chlorine INTO v_ph, v_chlorine
-  FROM pool_logs
-  WHERE pool_logs.pool_id = NEW.pool_id 
-    AND pool_logs.type = 'reading' 
-    AND pool_logs.ph IS NOT NULL
-  ORDER BY pool_logs.created_at DESC
-  LIMIT 1;
-  
-  -- Calculate status based on chemistry rules
-  IF v_ph IS NULL AND v_chlorine IS NULL THEN
-    v_status := 'offline';
-  ELSIF v_ph IS NOT NULL AND (v_ph < 6.8 OR v_ph > 8.0) THEN
-    v_status := 'critical';
-  ELSIF v_chlorine IS NOT NULL AND v_chlorine < 0.5 THEN
-    v_status := 'critical';
-  ELSIF v_ph IS NOT NULL AND (v_ph < 7.2 OR v_ph > 7.6) THEN
-    v_status := 'warning';
-  ELSIF v_chlorine IS NOT NULL AND (v_chlorine < 1.0 OR v_chlorine > 5.0) THEN
-    v_status := 'warning';
-  ELSE
-    v_status := 'crystal';
-  END IF;
-  
-  -- Update the pool status and last_reading_at
-  UPDATE pools 
-  SET status = v_status, 
-      updated_at = NOW(),
-      last_reading_at = NEW.created_at
-  WHERE id = NEW.pool_id;
+  -- Update status directly using subquery
+  UPDATE pools p SET
+    status = CASE
+      WHEN (SELECT ph FROM pool_logs WHERE pool_id = NEW.pool_id AND type = 'reading' ORDER BY created_at DESC LIMIT 1) IS NULL 
+           AND (SELECT chlorine FROM pool_logs WHERE pool_id = NEW.pool_id AND type = 'reading' ORDER BY created_at DESC LIMIT 1) IS NULL 
+      THEN 'offline'
+      WHEN (SELECT ph FROM pool_logs WHERE pool_id = NEW.pool_id AND type = 'reading' ORDER BY created_at DESC LIMIT 1) < 6.8 
+           OR (SELECT ph FROM pool_logs WHERE pool_id = NEW.pool_id AND type = 'reading' ORDER BY created_at DESC LIMIT 1) > 8.0 
+      THEN 'critical'
+      WHEN (SELECT chlorine FROM pool_logs WHERE pool_id = NEW.pool_id AND type = 'reading' ORDER BY created_at DESC LIMIT 1) < 0.5 
+      THEN 'critical'
+      WHEN (SELECT ph FROM pool_logs WHERE pool_id = NEW.pool_id AND type = 'reading' ORDER BY created_at DESC LIMIT 1) < 7.2 
+           OR (SELECT ph FROM pool_logs WHERE pool_id = NEW.pool_id AND type = 'reading' ORDER BY created_at DESC LIMIT 1) > 7.6 
+      THEN 'warning'
+      WHEN (SELECT chlorine FROM pool_logs WHERE pool_id = NEW.pool_id AND type = 'reading' ORDER BY created_at DESC LIMIT 1) < 1.0 
+           OR (SELECT chlorine FROM pool_logs WHERE pool_id = NEW.pool_id AND type = 'reading' ORDER BY created_at DESC LIMIT 1) > 5.0 
+      THEN 'warning'
+      ELSE 'crystal'
+    END,
+    updated_at = NOW(),
+    last_reading_at = NEW.created_at
+  WHERE p.id = NEW.pool_id;
   
   RETURN NEW;
 END;
