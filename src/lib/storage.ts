@@ -1,5 +1,6 @@
 // Local storage persistence for Crystal Pool
-// Supports both Homeowner (single pool) and Pro Keeper (multiple pools)
+// Supports Guest Mode, Homeowner, and Pro Keeper modes
+export type UserMode = "guest" | "homeowner" | "pro";
 export type PoolStatus = "crystal" | "warning" | "critical" | "algae" | "cloudy" | "offline";
 
 export interface Pool {
@@ -14,6 +15,10 @@ export interface Pool {
   chlorine?: number;
   alkalinity?: number;
   temperature?: number;
+  // Pro mode: client organization
+  tags?: string[]; // e.g., ["client:John", "address:123 Main St"]
+  address?: string;
+  clientName?: string;
 }
 
 export interface LogEntry {
@@ -28,6 +33,41 @@ export interface LogEntry {
 
 const POOLS_KEY = "cp.pools";
 const LOGS_KEY = "cp.logs";
+const GUEST_EXPIRY_KEY = "cp.guest_expiry";
+
+// Guest mode: 7-day expiry
+export const getGuestExpiry = (): Date | null => {
+  const expiry = localStorage.getItem(GUEST_EXPIRY_KEY);
+  return expiry ? new Date(expiry) : null;
+};
+
+export const setGuestExpiry = (days: number = 7) => {
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + days);
+  localStorage.setItem(GUEST_EXPIRY_KEY, expiry.toISOString());
+};
+
+export const isGuestExpired = (): boolean => {
+  const expiry = getGuestExpiry();
+  if (!expiry) {
+    setGuestExpiry(); // First visit - start countdown
+    return false;
+  }
+  return new Date() > expiry;
+};
+
+export const clearGuestData = () => {
+  localStorage.removeItem(POOLS_KEY);
+  localStorage.removeItem(LOGS_KEY);
+  localStorage.removeItem(GUEST_EXPIRY_KEY);
+};
+
+// Detect user mode based on user and pool count
+export const getUserMode = (user: { id: string } | null, poolCount: number): UserMode => {
+  if (!user) return "guest";
+  if (poolCount > 3) return "pro";
+  return "homeowner";
+};
 
 export const loadPools = (): Pool[] => {
   try { return JSON.parse(localStorage.getItem(POOLS_KEY) || "[]"); } catch { return []; }

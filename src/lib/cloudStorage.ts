@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Pool, LogEntry, PoolStatus } from "./storage";
-import { computeStatus, loadPools as loadLocal, loadLogs as loadLocalLogs, savePools, saveLogs } from "./storage";
+import type { Pool, LogEntry, PoolStatus, UserMode } from "./storage";
+import { computeStatus, loadPools as loadLocal, loadLogs as loadLocalLogs, savePools, saveLogs, getUserMode } from "./storage";
 
 const rowToPool = (r: any): Pool => ({
   id: r.id,
@@ -14,6 +14,10 @@ const rowToPool = (r: any): Pool => ({
   temperature: r.temperature ?? undefined,
   lastReadingAt: r.last_reading_at ?? undefined,
   createdAt: r.created_at,
+  // Pro mode fields
+  tags: r.tags ?? [],
+  address: r.address ?? undefined,
+  clientName: r.client_name ?? undefined,
 });
 
 const poolToRow = (p: Pool, userId: string) => ({
@@ -28,6 +32,10 @@ const poolToRow = (p: Pool, userId: string) => ({
   alkalinity: p.alkalinity ?? null,
   temperature: p.temperature ?? null,
   last_reading_at: p.lastReadingAt ?? null,
+  // Pro mode fields
+  tags: p.tags ?? null,
+  address: p.address ?? null,
+  client_name: p.clientName ?? null,
 });
 
 const rowToLog = (r: any): LogEntry => ({
