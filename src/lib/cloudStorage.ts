@@ -95,10 +95,22 @@ export const migrateGuestDataIfNeeded = async (userId: string) => {
     return;
   }
   try {
-    if (localPools.length > 0) {
-      const rows = localPools.map(p => poolToRow(p, userId));
-      await supabase.from("pools").upsert(rows);
+    // Fetch existing pools to avoid duplicates
+    const { data: existingPools } = await supabase
+      .from("pools")
+      .select("id")
+      .eq("user_id", userId);
+    const existingPoolIds = new Set(existingPools?.map(p => p.id) || []);
+    
+    // Only insert pools that don't already exist
+    const newPools = localPools.filter(p => !existingPoolIds.has(p.id));
+    if (newPools.length > 0) {
+      const rows = newPools.map(p => poolToRow(p, userId));
+      await supabase.from("pools").upsert(rows, { onConflict: "id" });
     }
+    
+    // Fetch existing logs to avoid duplicates
+    const existingLogIds = new Set(existingPools ? existingPools.map(p => p.id) : []);
     if (localLogs.length > 0) {
       const rows = localLogs.map(l => ({
         id: l.id,
@@ -110,7 +122,7 @@ export const migrateGuestDataIfNeeded = async (userId: string) => {
         values: l.values ?? null,
         created_at: l.createdAt,
       }));
-      await supabase.from("pool_logs").insert(rows);
+      await supabase.from("pool_logs").upsert(rows, { onConflict: "id" });
     }
     savePools([]);
     saveLogs([]);
